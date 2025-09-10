@@ -82,7 +82,7 @@ func NewContainer() (*Container, error) {
 }
 
 func (c *Container) initConfig() error {
-	cfg, err := config.LoadConfig()
+	cfg, err := config.Load()
 	if err != nil {
 		return err
 	}

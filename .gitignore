@@ -124,3 +124,5 @@ node_modules/
 
 # Go Server
 server
+
+config.yaml

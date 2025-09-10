@@ -1,0 +1,1283 @@
+{
+    "info": {
+        "name": "Logistics API",
+        "description": "API REST para gestión de órdenes de logística con arquitectura hexagonal.\n\n## Características\n- Autenticación JWT con roles (cliente/admin)\n- Validación de reglas de negocio\n- Rate limiting y logging estructurado\n- Health checks y graceful shutdown\n\n## Configuración\n1. Importar esta colección en Postman\n2. Configurar variables de entorno\n3. Ejecutar requests en orden\n\n## Variables requeridas\n- `baseUrl`: http://localhost:8080\n- `clientToken`: Se obtiene del login de cliente\n- `adminToken`: Se obtiene del login de admin",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Health Checks",
+            "description": "Endpoints para verificar el estado del sistema",
+            "item": [
+                {
+                    "name": "Health Check Completo",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/health",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        },
+                        "description": "Verifica el estado completo del sistema incluyendo base de datos"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Liveness Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/health/live",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health",
+                                "live"
+                            ]
+                        },
+                        "description": "Verifica que la aplicación esté viva"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Readiness Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/health/ready",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health",
+                                "ready"
+                            ]
+                        },
+                        "description": "Verifica que la aplicación esté lista"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Autenticación",
+            "description": "Endpoints para registro y login de usuarios",
+            "item": [
+                {
+                    "name": "Registrar Cliente",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.collectionVariables.set('clientToken', response.data.token);",
+                                    "    pm.collectionVariables.set('clientId', response.data.user.id);",
+                                    "    console.log('Cliente registrado exitosamente');",
+                                    "    console.log('Token guardado en variable clientToken');",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"{{testClientEmail}}\",\n  \"password\": \"{{testClientPassword}}\",\n  \"role\": \"client\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "description": "Registra un nuevo usuario cliente"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Registrar Administrador",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.collectionVariables.set('adminToken', response.data.token);",
+                                    "    pm.collectionVariables.set('adminId', response.data.user.id);",
+                                    "    console.log('Administrador registrado exitosamente');",
+                                    "    console.log('Token guardado en variable adminToken');",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"{{testAdminEmail}}\",\n  \"password\": \"{{testAdminPassword}}\",\n  \"role\": \"admin\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/register",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "auth",
+                                "register"
+                            ]
+                        },
+                        "description": "Registra un nuevo usuario administrador"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login Cliente",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.collectionVariables.set('clientToken', response.data.token);",
+                                    "    console.log('Login exitoso');",
+                                    "    console.log('Token actualizado en variable clientToken');",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"{{testClientEmail}}\",\n  \"password\": \"{{testClientPassword}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Inicia sesión como cliente"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Login Administrador",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 200) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.collectionVariables.set('adminToken', response.data.token);",
+                                    "    console.log('Login admin exitoso');",
+                                    "    console.log('Token actualizado en variable adminToken');",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"{{testAdminEmail}}\",\n  \"password\": \"{{testAdminPassword}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/auth/login",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "auth",
+                                "login"
+                            ]
+                        },
+                        "description": "Inicia sesión como administrador"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Órdenes - Cliente",
+            "description": "Endpoints disponibles para usuarios con rol cliente",
+            "item": [
+                {
+                    "name": "Crear Orden - Tamaño S (≤5kg)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "if (pm.response.code === 201) {",
+                                    "    const response = pm.response.json();",
+                                    "    pm.collectionVariables.set('lastOrderId', response.data.id);",
+                                    "    console.log('Orden creada:', response.data.id);",
+                                    "    console.log('Tamaño del paquete:', response.data.package_size);",
+                                    "}"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{clientToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"origin_coordinates\": {\n    \"latitude\": 19.4326,\n    \"longitude\": -99.1332\n  },\n  \"destination_coordinates\": {\n    \"latitude\": 19.4969,\n    \"longitude\": -99.1276\n  },\n  \"origin_address\": {\n    \"street\": \"Av. Paseo de la Reforma\",\n    \"zipcode\": \"06600\",\n    \"ext_num\": \"222\",\n    \"int_num\": \"Piso 10\",\n    \"city\": \"Ciudad de México\",\n    \"state\": \"CDMX\",\n    \"country\": \"México\"\n  },\n  \"destination_address\": {\n    \"street\": \"Av. Insurgentes Norte\",\n    \"zipcode\": \"07700\",\n    \"ext_num\": \"1500\",\n    \"city\": \"Ciudad de México\",\n    \"state\": \"CDMX\",\n    \"country\": \"México\"\n  },\n  \"product_quantity\": 2,\n  \"total_weight\": 3.5\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                ""
+                            ]
+                        },
+                        "description": "Crea una orden con peso ≤5kg (tamaño S)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Crear Orden - Tamaño M (≤15kg)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{clientToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"origin_coordinates\": {\n    \"latitude\": 19.3910,\n    \"longitude\": -99.2837\n  },\n  \"destination_coordinates\": {\n    \"latitude\": 19.4284,\n    \"longitude\": -99.1276\n  },\n  \"origin_address\": {\n    \"street\": \"Av. Santa Fe\",\n    \"zipcode\": \"01210\",\n    \"ext_num\": \"482\",\n    \"city\": \"Ciudad de México\",\n    \"state\": \"CDMX\",\n    \"country\": \"México\"\n  },\n  \"destination_address\": {\n    \"street\": \"Eje Central Lázaro Cárdenas\",\n    \"zipcode\": \"06050\",\n    \"ext_num\": \"100\",\n    \"city\": \"Ciudad de México\",\n    \"state\": \"CDMX\",\n    \"country\": \"México\"\n  },\n  \"product_quantity\": 5,\n  \"total_weight\": 12.8\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                ""
+                            ]
+                        },
+                        "description": "Crea una orden con peso entre 5-15kg (tamaño M)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Crear Orden - Tamaño L (≤25kg)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{clientToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"origin_coordinates\": {\n    \"latitude\": 19.3426,\n    \"longitude\": -99.1332\n  },\n  \"destination_coordinates\": {\n    \"latitude\": 19.5069,\n    \"longitude\": -99.1276\n  },\n  \"origin_address\": {\n    \"street\": \"Av. División del Norte\",\n    \"zipcode\": \"03100\",\n    \"ext_num\": \"2901\",\n    \"city\": \"Ciudad de México\",\n    \"state\": \"CDMX\",\n    \"country\": \"México\"\n  },\n  \"destination_address\": {\n    \"street\": \"Calz. de Guadalupe\",\n    \"zipcode\": \"07050\",\n    \"ext_num\": \"290\",\n    \"city\": \"Ciudad de México\",\n    \"state\": \"CDMX\",\n    \"country\": \"México\"\n  },\n  \"product_quantity\": 1,\n  \"total_weight\": 22.5\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                ""
+                            ]
+                        },
+                        "description": "Crea una orden con peso entre 15-25kg (tamaño L)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Crear Orden - Peso Excedido (>25kg)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{clientToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"origin_coordinates\": {\n    \"latitude\": 19.4326,\n    \"longitude\": -99.1332\n  },\n  \"destination_coordinates\": {\n    \"latitude\": 19.4969,\n    \"longitude\": -99.1276\n  },\n  \"origin_address\": {\n    \"street\": \"Av. Juárez\",\n    \"zipcode\": \"06600\",\n    \"ext_num\": \"70\",\n    \"city\": \"Ciudad de México\",\n    \"state\": \"CDMX\",\n    \"country\": \"México\"\n  },\n  \"destination_address\": {\n    \"street\": \"Av. Hidalgo\",\n    \"zipcode\": \"06300\",\n    \"ext_num\": \"39\",\n    \"city\": \"Ciudad de México\",\n    \"state\": \"CDMX\",\n    \"country\": \"México\"\n  },\n  \"product_quantity\": 1,\n  \"total_weight\": 30.0\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                ""
+                            ]
+                        },
+                        "description": "Intenta crear una orden con peso >25kg. Debe fallar y solicitar convenio especial."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Listar Mis Órdenes",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{clientToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/?page=1&limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Lista las órdenes del cliente autenticado con paginación"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Intentar Actualizar Estado (Debe Fallar)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{clientToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"recolectado\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/{{lastOrderId}}/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                "{{lastOrderId}}",
+                                "status"
+                            ]
+                        },
+                        "description": "Los clientes no pueden actualizar estados. Debe retornar error 403."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Órdenes - Administrador",
+            "description": "Endpoints exclusivos para usuarios con rol administrador",
+            "item": [
+                {
+                    "name": "Listar Todas las Órdenes",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/?page=1&limit=20",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "Los administradores pueden ver todas las órdenes del sistema"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Filtrar Órdenes por Estado",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/?status=creado&limit=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                ""
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "creado"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "10"
+                                }
+                            ]
+                        },
+                        "description": "Filtra órdenes por estado específico"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Actualizar Estado: Creado → Recolectado",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"recolectado\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/{{lastOrderId}}/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                "{{lastOrderId}}",
+                                "status"
+                            ]
+                        },
+                        "description": "Transición válida: creado → recolectado"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Actualizar Estado: Recolectado → En Estación",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"en_estacion\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/{{lastOrderId}}/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                "{{lastOrderId}}",
+                                "status"
+                            ]
+                        },
+                        "description": "Transición válida: recolectado → en_estacion"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Actualizar Estado: En Estación → En Ruta",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"en_ruta\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/{{lastOrderId}}/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                "{{lastOrderId}}",
+                                "status"
+                            ]
+                        },
+                        "description": "Transición válida: en_estacion → en_ruta"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Actualizar Estado: En Ruta → Entregado",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"entregado\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/{{lastOrderId}}/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                "{{lastOrderId}}",
+                                "status"
+                            ]
+                        },
+                        "description": "Transición válida: en_ruta → entregado"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Cancelar Orden",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"cancelado\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/{{lastOrderId}}/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                "{{lastOrderId}}",
+                                "status"
+                            ]
+                        },
+                        "description": "Las órdenes pueden cancelarse desde cualquier estado (excepto entregado)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Transición Inválida (Debe Fallar)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{adminToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"entregado\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/{{lastOrderId}}/status",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                "{{lastOrderId}}",
+                                "status"
+                            ]
+                        },
+                        "description": "Intenta una transición inválida (ej: creado → entregado). Debe fallar."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Casos de Error",
+            "description": "Requests para probar manejo de errores y validaciones",
+            "item": [
+                {
+                    "name": "Request sin Token",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                ""
+                            ]
+                        },
+                        "description": "Debe retornar error 401 - Authentication required"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Token Inválido",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "invalid.jwt.token",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                ""
+                            ]
+                        },
+                        "description": "Debe retornar error 401 - Invalid token"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Coordenadas Inválidas",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{clientToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"origin_coordinates\": {\n    \"latitude\": 999.0,\n    \"longitude\": -999.0\n  },\n  \"destination_coordinates\": {\n    \"latitude\": 19.4969,\n    \"longitude\": -99.1276\n  },\n  \"origin_address\": {\n    \"street\": \"Calle Test\",\n    \"zipcode\": \"12345\",\n    \"ext_num\": \"123\",\n    \"city\": \"Test\",\n    \"state\": \"Test\",\n    \"country\": \"Test\"\n  },\n  \"destination_address\": {\n    \"street\": \"Calle Test 2\",\n    \"zipcode\": \"54321\",\n    \"ext_num\": \"456\",\n    \"city\": \"Test 2\",\n    \"state\": \"Test 2\",\n    \"country\": \"Test 2\"\n  },\n  \"product_quantity\": 1,\n  \"total_weight\": 5.0\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                ""
+                            ]
+                        },
+                        "description": "Debe retornar error de validación por coordenadas fuera de rango"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Campos Requeridos Faltantes",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{clientToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"origin_coordinates\": {\n    \"latitude\": 19.4326\n  },\n  \"destination_coordinates\": {\n    \"latitude\": 19.4969,\n    \"longitude\": -99.1276\n  },\n  \"product_quantity\": 1\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                ""
+                            ]
+                        },
+                        "description": "Debe retornar error de validación por campos faltantes"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Peso Negativo",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{clientToken}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"origin_coordinates\": {\n    \"latitude\": 19.4326,\n    \"longitude\": -99.1332\n  },\n  \"destination_coordinates\": {\n    \"latitude\": 19.4969,\n    \"longitude\": -99.1276\n  },\n  \"origin_address\": {\n    \"street\": \"Calle Test\",\n    \"zipcode\": \"12345\",\n    \"ext_num\": \"123\",\n    \"city\": \"Test\",\n    \"state\": \"Test\",\n    \"country\": \"Test\"\n  },\n  \"destination_address\": {\n    \"street\": \"Calle Test 2\",\n    \"zipcode\": \"54321\",\n    \"ext_num\": \"456\",\n    \"city\": \"Test 2\",\n    \"state\": \"Test 2\",\n    \"country\": \"Test 2\"\n  },\n  \"product_quantity\": 1,\n  \"total_weight\": -5.0\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/orders/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "orders",
+                                ""
+                            ]
+                        },
+                        "description": "Debe retornar error por peso negativo"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Endpoint No Encontrado",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/api/v1/nonexistent",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "api",
+                                "v1",
+                                "nonexistent"
+                            ]
+                        },
+                        "description": "Debe retornar error 404 - Route not found"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Rate Limiting",
+            "description": "Tests para verificar rate limiting",
+            "item": [
+                {
+                    "name": "Test Rate Limit",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "// Este script ejecuta múltiples requests rápidos",
+                                    "const requests = 25; // Más que el burst limit (20)",
+                                    "let counter = 0;",
+                                    "",
+                                    "function sendRequest() {",
+                                    "    if (counter < requests) {",
+                                    "        pm.sendRequest({",
+                                    "            url: pm.environment.get('baseUrl') + '/health',",
+                                    "            method: 'GET'",
+                                    "        }, function (err, res) {",
+                                    "            counter++;",
+                                    "            console.log(`Request ${counter}: ${res.code}`);",
+                                    "            if (res.code === 429) {",
+                                    "                console.log('Rate limit alcanzado en request', counter);",
+                                    "            }",
+                                    "            if (counter < requests) {",
+                                    "                setTimeout(sendRequest, 50); // 50ms delay",
+                                    "            }",
+                                    "        });",
+                                    "    }",
+                                    "}",
+                                    "",
+                                    "// Ejecutar solo en pre-request para no duplicar",
+                                    "sendRequest();"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/health",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        },
+                        "description": "Ejecuta múltiples requests para probar rate limiting (10 req/sec, burst 20)"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ],
+    "event": [
+        {
+            "listen": "prerequest",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Script global que se ejecuta antes de cada request",
+                    "console.log('🚀 Ejecutando:', pm.info.requestName);",
+                    "",
+                    "// Verificar que baseUrl esté configurado",
+                    "if (!pm.environment.get('baseUrl')) {",
+                    "    console.log('⚠️ Configura la variable baseUrl en tu environment');",
+                    "}",
+                    "",
+                    "// Mostrar tokens disponibles para debugging",
+                    "const clientToken = pm.environment.get('clientToken');",
+                    "const adminToken = pm.environment.get('adminToken');",
+                    "",
+                    "if (clientToken) {",
+                    "    console.log('🔑 Client token disponible:', clientToken.substring(0, 20) + '...');",
+                    "}",
+                    "if (adminToken) {",
+                    "    console.log('🔑 Admin token disponible:', adminToken.substring(0, 20) + '...');",
+                    "}"
+                ]
+            }
+        },
+        {
+            "listen": "test",
+            "script": {
+                "type": "text/javascript",
+                "exec": [
+                    "// Script global que se ejecuta después de cada request",
+                    "const responseTime = pm.response.responseTime;",
+                    "const statusCode = pm.response.code;",
+                    "const requestName = pm.info.requestName;",
+                    "",
+                    "console.log(`✅ ${requestName}: ${statusCode} (${responseTime}ms)`);",
+                    "",
+                    "// AUTO-GUARDAR TOKENS de endpoints de autenticación",
+                    "if (statusCode === 200 || statusCode === 201) {",
+                    "    try {",
+                    "        const response = pm.response.json();",
+                    "        ",
+                    "        // Si la respuesta tiene token, guardarlo automáticamente",
+                    "        if (response.data && response.data.token) {",
+                    "            const token = response.data.token;",
+                    "            const user = response.data.user;",
+                    "            ",
+                    "            if (user && user.role) {",
+                    "                if (user.role === 'client') {",
+                    "                    pm.collectionVariables.set('clientToken', token);",
+                    "                    pm.collectionVariables.set('clientId', user.id);",
+                    "                    console.log('💾 Token de cliente guardado automáticamente');",
+                    "                } else if (user.role === 'admin') {",
+                    "                    pm.collectionVariables.set('adminToken', token);",
+                    "                    pm.collectionVariables.set('adminId', user.id);",
+                    "                    console.log('💾 Token de admin guardado automáticamente');",
+                    "                }",
+                    "            }",
+                    "        }",
+                    "        ",
+                    "        // Si es una orden creada, guardar el ID",
+                    "        if (response.data && response.data.id && requestName.includes('Crear Orden')) {",
+                    "            pm.collectionVariables.set('lastOrderId', response.data.id);",
+                    "            console.log('💾 ID de orden guardado:', response.data.id);",
+                    "        }",
+                    "        ",
+                    "    } catch (e) {",
+                    "        // No todas las respuestas son JSON, está ok",
+                    "    }",
+                    "}",
+                    "",
+                    "// Log de errores para debugging",
+                    "if (statusCode >= 400) {",
+                    "    try {",
+                    "        const error = pm.response.json();",
+                    "        console.log('❌ Error:', error.error?.message || error.message || 'Error desconocido');",
+                    "    } catch (e) {",
+                    "        console.log('❌ Error response:', pm.response.text());",
+                    "    }",
+                    "}",
+                    "",
+                    "// Auto-tests para responses exitosos",
+                    "if (statusCode < 400) {",
+                    "    pm.test('Status code is success', function () {",
+                    "        pm.response.to.have.status(statusCode);",
+                    "    });",
+                    "    ",
+                    "    pm.test('Response time is acceptable', function () {",
+                    "        pm.expect(pm.response.responseTime).to.be.below(5000);",
+                    "    });",
+                    "    ",
+                    "    const contentType = pm.response.headers.get('Content-Type');",
+                    "    if (contentType && contentType.includes('application/json')) {",
+                    "        pm.test('Response is valid JSON', function () {",
+                    "            pm.response.to.be.json;",
+                    "        });",
+                    "    }",
+                    "}"
+                ]
+            }
+        }
+    ],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8080",
+            "description": "URL base de la API",
+            "type": "string"
+        },
+        {
+            "key": "testClientEmail",
+            "value": "test-client-email@test.com",
+            "description": "Email para pruebas de usuario cliente",
+            "type": "string"
+        },
+        {
+            "key": "testClientPassword",
+            "value": "testclientpassword",
+            "description": "Password para pruebas de usuario cliente",
+            "type": "string"
+        },
+        {
+            "key": "testAdminEmail",
+            "value": "test-admin-email@test.com",
+            "description": "Email para pruebas de usuario administrador",
+            "type": "string"
+        },
+        {
+            "key": "testAdminPassword",
+            "value": "testadminpassword",
+            "description": "Password para pruebas de usuario administrador",
+            "type": "string"
+        },
+        {
+            "key": "clientToken",
+            "value": "",
+            "description": "JWT token para usuario cliente (se actualiza automáticamente)",
+            "type": "string"
+        },
+        {
+            "key": "adminToken",
+            "value": "",
+            "description": "JWT token para usuario administrador (se actualiza automáticamente)",
+            "type": "string"
+        },
+        {
+            "key": "lastOrderId",
+            "value": "",
+            "description": "ID de la última orden creada (se actualiza automáticamente)",
+            "type": "string"
+        },
+        {
+            "key": "clientId",
+            "value": "",
+            "description": "ID del usuario cliente (se actualiza automáticamente)",
+            "type": "string"
+        },
+        {
+            "key": "adminId",
+            "value": "",
+            "description": "ID del usuario administrador (se actualiza automáticamente)",
+            "type": "string"
+        }
+    ]
+}

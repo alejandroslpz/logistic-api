@@ -11,7 +11,7 @@ API REST para gestión de órdenes de logística construida con **Go** y **arqui
 ### 1. Instalar y ejecutar
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/alejandroslpz/logistic-api
 cd logistics-api
 cp .env.example .env  # Configurar variables
 go mod download
@@ -133,13 +133,17 @@ curl -X POST http://localhost:8080/api/v1/orders/ \
 ### Variables de Entorno Requeridas
 
 ```bash
-DATABASE_URL=postgresql://user:pass@host:port/db?sslmode=require
-JWT_SECRET=your-super-secret-jwt-key-32-chars-min
+DATABASE_URL=postgresql://neondb_owner:npg_9LoHEM2gSWUf@ep-billowing-tooth-ad6hoxu1-pooler.c-2.us-east-1.aws.neon.tech/neondb
+JWT_SECRET=TQaAmsr40w8cybvuxBfH4psWlbUTUM+VGn63jfYDzs0=
 JWT_EXPIRY_HOUR=24
 SERVER_HOST=localhost
 SERVER_PORT=8080
-LOG_LEVEL=info
+LOG_LEVEL=debug
 LOG_FORMAT=json
+SERVER_READ_TIMEOUT=30
+SERVER_WRITE_TIMEOUT=30
+DB_MAX_OPEN_CONNS=10
+DB_MAX_IDLE_CONNS=2
 ```
 
 ### Comandos Disponibles
@@ -147,7 +151,6 @@ LOG_FORMAT=json
 ```bash
 make run          # Ejecutar aplicación
 make build        # Construir binario
-make test         # Ejecutar tests
 make clean        # Limpiar artifacts
 make gen-jwt      # Generar JWT secret
 make db-status    # Verificar BD
@@ -290,4 +293,4 @@ Ver ejemplos en las secciones anteriores o usar la colección de Postman como re
 
 **💡 Tip**: Para una experiencia óptima, usa la **colección de Postman** que incluye scripts automáticos, validaciones y casos de prueba completos.
 
-**📧 Contacto**: [tu-email@example.com] | **🐙 GitHub**: [tu-usuario]
+**📧 Contacto**: [mail](mailto:alejandroslpz@gmail.com) | **🐙 GitHub**: [alejandroslpz](https://github.com/alejandroslpz)
